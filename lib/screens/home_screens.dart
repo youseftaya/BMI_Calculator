@@ -141,7 +141,7 @@ class _BmiScreenState extends State<BmiScreen> {
                                     : cardBackgroundColor,
                                 iconColor: isOn
                                     ? Colors.white
-                                    : Colors.pinkAccent,
+                                    : const Color(0xFF616161),
                               ),
                             ),
                           ),
@@ -395,6 +395,7 @@ class _BmiScreenState extends State<BmiScreen> {
                       bmiResult: bmi.toStringAsFixed(1),
                       resultText: resultText,
                       interpretation: interpretation,
+                      isOn: isOn,
                     ),
                   ),
                 );
