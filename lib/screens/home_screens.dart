@@ -4,7 +4,7 @@ import '../widgets/counter_card.dart';
 import 'result_screen.dart';
 
 class BmiScreen extends StatefulWidget {
-  const BmiScreen({Key? key}) : super(key: key);
+  const BmiScreen({super.key});
 
   @override
   State<BmiScreen> createState() => _BmiScreenState();
