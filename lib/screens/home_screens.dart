@@ -1,63 +1,161 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+import '../models/bmi_history_model.dart';
 import '../widgets/gender_card.dart';
 import '../widgets/counter_card.dart';
 import 'result_screen.dart';
+import 'history_screen.dart';
+import 'statistics_screen.dart';
+import 'bmi_chart_screen.dart';
+import 'profile_screen.dart';
 
 class BmiScreen extends StatefulWidget {
-  const BmiScreen({super.key});
+  final bool isOn;
+
+  const BmiScreen({
+    super.key,
+    this.isOn = true,
+  });
 
   @override
   State<BmiScreen> createState() => _BmiScreenState();
 }
 
 class _BmiScreenState extends State<BmiScreen> {
+  late bool isOn;
+
   bool isMale = true;
 
   bool isHeightSelected = false;
   bool isWeightSelected = false;
   bool isAgeSelected = false;
 
-  bool isOn = true;
-
   double height = 150.0;
   int weight = 60;
   int age = 26;
 
-  static const Color darkBackgroundColor = Color(0xFF1C2135);
-  static const Color darkCardColor = Color(0xFF24263B);
-  static const Color darkActiveCardColor = Color(0xFF3A4056);
+  static const Color darkBackgroundColor =
+      Color(0xFF1C2135);
 
-  static const Color lightBackgroundColor = Color(0xFFF5F5F5);
-  static const Color lightCardColor = Colors.white;
-  static const Color lightActiveCardColor = Color(0xFFE3F2FD);
+  static const Color darkCardColor =
+      Color(0xFF24263B);
 
-  static const Color blueColor = Color(0xFFE91E63);
+  static const Color darkActiveCardColor =
+      Color(0xFF3A4056);
+
+  static const Color lightBackgroundColor =
+      Color(0xFFF5F5F5);
+
+  static const Color lightCardColor =
+      Colors.white;
+
+  static const Color lightActiveCardColor =
+      Color(0xFFE3F2FD);
+
+  static const Color pinkColor =
+      Color(0xFFE91E63);
+
+  @override
+  void initState() {
+    super.initState();
+
+    isOn = widget.isOn;
+
+    _loadProfileData();
+  }
+
+  void _loadProfileData() {
+    final box = Hive.box('profile_data');
+
+    final savedGender = box.get('isMale');
+    final savedAge = box.get('age');
+    final savedWeight = box.get('weight');
+    final savedHeight = box.get('height');
+
+    if (savedGender != null) {
+      isMale = savedGender as bool;
+    }
+
+    if (savedAge != null) {
+      age = savedAge as int;
+    }
+
+    if (savedWeight != null) {
+      weight = savedWeight as int;
+    }
+
+    if (savedHeight != null) {
+      height = (savedHeight as num).toDouble();
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _saveBasicProfileData() {
+    final box = Hive.box('profile_data');
+
+    box.put('isMale', isMale);
+    box.put('age', age);
+    box.put('weight', weight);
+    box.put('height', height);
+  }
+
+  void openProfile() {
+    _saveBasicProfileData();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          isOn: isOn,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final Color backgroundColor =
-        isOn ? darkBackgroundColor : lightBackgroundColor;
+        isOn
+            ? darkBackgroundColor
+            : lightBackgroundColor;
 
     final Color cardBackgroundColor =
-        isOn ? darkCardColor : lightCardColor;
+        isOn
+            ? darkCardColor
+            : lightCardColor;
 
     final Color activeCardColor =
-        isOn ? darkActiveCardColor : lightActiveCardColor;
+        isOn
+            ? darkActiveCardColor
+            : lightActiveCardColor;
 
     final Color textColor =
-        isOn ? Colors.white : Colors.black87;
+        isOn
+            ? Colors.white
+            : Colors.black87;
 
     final Color secondaryTextColor =
-        isOn ? Colors.grey : Colors.black54;
+        isOn
+            ? Colors.grey
+            : Colors.black54;
 
     final Color counterButtonColor =
-        isOn ? const Color(0xFF5D647B) : Colors.white;
+        isOn
+            ? const Color(0xFF5D647B)
+            : Colors.white;
 
     final Color counterIconColor =
-        isOn ? Colors.white : const Color(0xFF555555);
+        isOn
+            ? Colors.white
+            : const Color(0xFF555555);
 
     return Scaffold(
       backgroundColor: backgroundColor,
+
       body: SafeArea(
         child: Column(
           children: [
@@ -76,50 +174,111 @@ class _BmiScreenState extends State<BmiScreen> {
                     color: isOn
                         ? const Color(0xFF121623)
                         : const Color(0xFFD0D0D0),
-                    width: 2.0,
+                    width: 2,
                   ),
                 ),
               ),
-              child: Stack(
-                alignment: Alignment.center,
+              child: Row(
                 children: [
-                  Positioned(
-                    left: 8,
-                    child: Switch(
-                      value: isOn,
-                      onChanged: (value) {
-                        setState(() {
-                          isOn = value;
-                        });
-                      },
-
-                      // Dark Mode = أبيض
-                      activeColor: Colors.white,
-
-                      // Light Mode = أزرق
-                      inactiveThumbColor: const Color(0xFFE91E63),
-
-                      // لون خلفية الزر في Light Mode
-                      inactiveTrackColor: const Color(0xFFE91E63).withOpacity(0.3),
+                  // Back to Profile
+                  IconButton(
+                    onPressed: openProfile,
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: pinkColor,
+                      size: 27,
                     ),
                   ),
 
-                  Text(
-                    'BMI Calculator',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                  // Title
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'BMI Calculator',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+                      ),
                     ),
+                  ),
+
+                  // Actions
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  StatisticsScreen(
+                                isOn: isOn,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.bar_chart,
+                          color: pinkColor,
+                          size: 26,
+                        ),
+                      ),
+
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  BmiChartScreen(
+                                isOn: isOn,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.show_chart,
+                          color: pinkColor,
+                          size: 26,
+                        ),
+                      ),
+
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  HistoryScreen(
+                                isOn: isOn,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.history,
+                          color: pinkColor,
+                          size: 26,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
+            // Body
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding:
+                    const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     // Male / Female
@@ -132,16 +291,22 @@ class _BmiScreenState extends State<BmiScreen> {
                                 setState(() {
                                   isMale = true;
                                 });
+
+                                _saveBasicProfileData();
                               },
                               child: GenderCard(
                                 title: 'Male',
-                                imagePath: 'assets/icons/Vector(9).png',
-                                backgroundColor: isMale
-                                    ? activeCardColor
-                                    : cardBackgroundColor,
+                                imagePath:
+                                    'assets/icons/Vector(9).png',
+                                backgroundColor:
+                                    isMale
+                                        ? activeCardColor
+                                        : cardBackgroundColor,
                                 iconColor: isOn
                                     ? Colors.white
-                                    : const Color(0xFF616161),
+                                    : const Color(
+                                        0xFF616161,
+                                      ),
                               ),
                             ),
                           ),
@@ -154,16 +319,22 @@ class _BmiScreenState extends State<BmiScreen> {
                                 setState(() {
                                   isMale = false;
                                 });
+
+                                _saveBasicProfileData();
                               },
                               child: GenderCard(
                                 title: 'Female',
-                                imagePath: 'assets/icons/Vector(10).png',
-                                backgroundColor: !isMale
-                                    ? activeCardColor
-                                    : cardBackgroundColor,
+                                imagePath:
+                                    'assets/icons/Vector(10).png',
+                                backgroundColor:
+                                    !isMale
+                                        ? activeCardColor
+                                        : cardBackgroundColor,
                                 iconColor: isOn
                                     ? Colors.white
-                                    : const Color(0xFF555555),
+                                    : const Color(
+                                        0xFF555555,
+                                      ),
                               ),
                             ),
                           ),
@@ -188,15 +359,18 @@ class _BmiScreenState extends State<BmiScreen> {
                             color: isHeightSelected
                                 ? activeCardColor
                                 : cardBackgroundColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(12),
                           ),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
                             children: [
                               Text(
                                 'Height',
                                 style: TextStyle(
-                                  color: secondaryTextColor,
+                                  color:
+                                      secondaryTextColor,
                                   fontSize: 22,
                                 ),
                               ),
@@ -207,7 +381,8 @@ class _BmiScreenState extends State<BmiScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.center,
                                 crossAxisAlignment:
-                                    CrossAxisAlignment.baseline,
+                                    CrossAxisAlignment
+                                        .baseline,
                                 textBaseline:
                                     TextBaseline.alphabetic,
                                 children: [
@@ -216,7 +391,8 @@ class _BmiScreenState extends State<BmiScreen> {
                                     style: TextStyle(
                                       color: textColor,
                                       fontSize: 42,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight:
+                                          FontWeight.bold,
                                     ),
                                   ),
 
@@ -233,19 +409,24 @@ class _BmiScreenState extends State<BmiScreen> {
                               ),
 
                               SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  activeTrackColor: Colors.pinkAccent,
-                                  inactiveTrackColor: isOn
-                                      ? Colors.white24
-                                      : Colors.black26,
-                                  thumbColor: Colors.pink,
+                                data: SliderTheme.of(context)
+                                    .copyWith(
+                                  activeTrackColor:
+                                      Colors.pinkAccent,
+                                  inactiveTrackColor:
+                                      isOn
+                                          ? Colors.white24
+                                          : Colors.black26,
+                                  thumbColor:
+                                      pinkColor,
                                   overlayColor:
-                                      Colors.pinkAccent.withOpacity(0.2),
+                                      Colors.pinkAccent
+                                          .withOpacity(0.2),
                                   thumbShape:
                                       const RoundSliderThumbShape(
-                                    enabledThumbRadius: 8.0,
+                                    enabledThumbRadius: 8,
                                   ),
-                                  trackHeight: 2.0,
+                                  trackHeight: 2,
                                 ),
                                 child: Slider(
                                   value: height,
@@ -254,8 +435,11 @@ class _BmiScreenState extends State<BmiScreen> {
                                   onChanged: (value) {
                                     setState(() {
                                       height = value;
-                                      isHeightSelected = true;
+                                      isHeightSelected =
+                                          true;
                                     });
+
+                                    _saveBasicProfileData();
                                   },
                                 ),
                               ),
@@ -275,17 +459,20 @@ class _BmiScreenState extends State<BmiScreen> {
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  isWeightSelected = true;
-                                  isHeightSelected = false;
+                                  isWeightSelected =
+                                      true;
+                                  isHeightSelected =
+                                      false;
                                   isAgeSelected = false;
                                 });
                               },
                               child: CounterCard(
                                 title: 'Weight',
                                 value: weight,
-                                backgroundColor: isWeightSelected
-                                    ? activeCardColor
-                                    : cardBackgroundColor,
+                                backgroundColor:
+                                    isWeightSelected
+                                        ? activeCardColor
+                                        : cardBackgroundColor,
                                 textColor: textColor,
                                 buttonBackgroundColor:
                                     counterButtonColor,
@@ -294,15 +481,21 @@ class _BmiScreenState extends State<BmiScreen> {
                                 onIncrement: () {
                                   setState(() {
                                     weight++;
-                                    isWeightSelected = true;
+                                    isWeightSelected =
+                                        true;
                                   });
+
+                                  _saveBasicProfileData();
                                 },
                                 onDecrement: () {
                                   if (weight > 1) {
                                     setState(() {
                                       weight--;
-                                      isWeightSelected = true;
+                                      isWeightSelected =
+                                          true;
                                     });
+
+                                    _saveBasicProfileData();
                                   }
                                 },
                               ),
@@ -316,16 +509,19 @@ class _BmiScreenState extends State<BmiScreen> {
                               onTap: () {
                                 setState(() {
                                   isAgeSelected = true;
-                                  isHeightSelected = false;
-                                  isWeightSelected = false;
+                                  isHeightSelected =
+                                      false;
+                                  isWeightSelected =
+                                      false;
                                 });
                               },
                               child: CounterCard(
                                 title: 'Age',
                                 value: age,
-                                backgroundColor: isAgeSelected
-                                    ? activeCardColor
-                                    : cardBackgroundColor,
+                                backgroundColor:
+                                    isAgeSelected
+                                        ? activeCardColor
+                                        : cardBackgroundColor,
                                 textColor: textColor,
                                 buttonBackgroundColor:
                                     counterButtonColor,
@@ -336,6 +532,8 @@ class _BmiScreenState extends State<BmiScreen> {
                                     age++;
                                     isAgeSelected = true;
                                   });
+
+                                  _saveBasicProfileData();
                                 },
                                 onDecrement: () {
                                   if (age > 1) {
@@ -343,6 +541,8 @@ class _BmiScreenState extends State<BmiScreen> {
                                       age--;
                                       isAgeSelected = true;
                                     });
+
+                                    _saveBasicProfileData();
                                   }
                                 },
                               ),
@@ -358,11 +558,13 @@ class _BmiScreenState extends State<BmiScreen> {
 
             // Calculate Button
             GestureDetector(
-              onTap: () {
-                final double heightInMeters = height / 100;
+              onTap: () async {
+                final double heightInMeters =
+                    height / 100;
 
                 final double bmi =
-                    weight / (heightInMeters * heightInMeters);
+                    weight /
+                    (heightInMeters * heightInMeters);
 
                 String resultText;
                 String interpretation;
@@ -388,13 +590,51 @@ class _BmiScreenState extends State<BmiScreen> {
                       'Consider a healthy lifestyle.';
                 }
 
+                final bmiHistory =
+                    BmiHistoryModel(
+                  bmi: bmi,
+                  result: resultText,
+                  interpretation: interpretation,
+                  age: age,
+                  weight: weight,
+                  height: height,
+                  isMale: isMale,
+                  date: DateTime.now(),
+                );
+
+                final box =
+                    Hive.box<BmiHistoryModel>(
+                  'bmi_history',
+                );
+
+                await box.add(bmiHistory);
+
+                // Save latest BMI
+                final profileBox =
+                    Hive.box('profile_data');
+
+                await profileBox.put('isMale', isMale);
+                await profileBox.put('age', age);
+                await profileBox.put('weight', weight);
+                await profileBox.put('height', height);
+                await profileBox.put('bmi', bmi);
+                await profileBox.put(
+                  'resultText',
+                  resultText,
+                );
+
+                if (!context.mounted) return;
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ResultScreen(
-                      bmiResult: bmi.toStringAsFixed(1),
+                    builder: (context) =>
+                        ResultScreen(
+                      bmiResult:
+                          bmi.toStringAsFixed(1),
                       resultText: resultText,
-                      interpretation: interpretation,
+                      interpretation:
+                          interpretation,
                       isOn: isOn,
                     ),
                   ),
@@ -403,10 +643,12 @@ class _BmiScreenState extends State<BmiScreen> {
               child: Container(
                 width: double.infinity,
                 height: 60,
-                margin: const EdgeInsets.only(top: 10),
+                margin:
+                    const EdgeInsets.only(top: 10),
                 decoration: const BoxDecoration(
-                  color: Colors.pink,
-                  borderRadius: BorderRadius.vertical(
+                  color: pinkColor,
+                  borderRadius:
+                      BorderRadius.vertical(
                     top: Radius.circular(15),
                   ),
                 ),
